@@ -4,19 +4,10 @@ import pygame
 from random import choice
 
 pygame.init()
+pygame.key.set_repeat(1, 50) 
 screen = pygame.display.set_mode((768, 512))
 clock = pygame.time.Clock()
-running = True
-bug_sprites = pygame.sprite.Group()
-pygame.key.set_repeat (1, 50)         
-all_sprites = pygame.sprite.Group()
-space = pygame.sprite.Group()
-bullets = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-boom = pygame.sprite.Group()
-LASER = pygame.sprite.Group()
-Ships = pygame.sprite.Group()
-fps = 60
+fps = 30
 
 
 class Y_kord():
@@ -25,14 +16,12 @@ class Y_kord():
     juk = 0
     povorot = 0
     
+
 def load_level(filename):
     filename = "data/" + filename
-    # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-
-    # и подсчитываем максимальную длину    
-    max_width = max(map(len, level_map))   
+    
     return list(level_map)    
 
 
@@ -49,12 +38,14 @@ def load_image(name, color_key=None):
         image.set_colorkey(color_key)
     return image
 
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x):
         super().__init__(tiles_group)
         self.image = tile_images[tile_type][0]
         self.rect = self.image.get_rect().move(
             128 * pos_x, (pos_y.y) + 200)
+
         
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -79,9 +70,11 @@ def generate_level(level):
     # вернем игрока, а также размер поля в клетках            
     return new_player, x, y
 
+
 class Planet(pygame.sprite.Sprite):
     v = 1
     k = 1
+    
     def __init__(self, name, x, y, v):
         super().__init__(all_sprites)
         self.image = load_image(name)
@@ -100,6 +93,7 @@ class Planet(pygame.sprite.Sprite):
             self.k = -1
         elif self.rect.x < 5:
             self.k = 1
+
     
 class Boom(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows):
@@ -108,8 +102,7 @@ class Boom(pygame.sprite.Sprite):
         self.cut_sheet(sheet, columns, rows)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
-
-        
+     
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
@@ -121,6 +114,7 @@ class Boom(pygame.sprite.Sprite):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame] 
 
+
 class Space(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(space)
@@ -128,6 +122,7 @@ class Space(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = 0
         self.rect.y = 0  
+
 
 class SpaceShip(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -138,8 +133,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image = self.frames[0]
         self.rect.x = 150
         self.rect.y = y * 300
-
-        
+      
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         frame_location = (self.rect.w * 4, self.rect.h * 1)
@@ -147,6 +141,7 @@ class SpaceShip(pygame.sprite.Sprite):
 
     def update(self):
         self.image = self.frames[0] 
+ 
         
 class Camera:
     # зададим начальный сдвиг камеры
@@ -161,6 +156,7 @@ class Camera:
         # вычислим координату клетки, если она уехала влево за границу экрана
         if obj.rect.x < -obj.rect.width:
             obj.rect.x += (self.field_size[0]) * obj.rect.width
+  
        
 class NewPlanets(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -170,8 +166,7 @@ class NewPlanets(pygame.sprite.Sprite):
         self.image = self.frames[0]
         self.rect.x = x 
         self.rect.y = y
-
-        
+       
     def cut_sheet(self, sheet):
         self.rect = pygame.Rect(0, 0, 120, 100)
         frame_location = (260, 0)
@@ -179,16 +174,22 @@ class NewPlanets(pygame.sprite.Sprite):
 
     def update(self):
         self.image = self.frames[0]  
+ 
         
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(bullets)
         self.frames = []
-        self.frames.append(pygame.transform.flip(load_image('spark/frames/spark-preview1.png'), False, False))
-        self.frames.append(pygame.transform.flip(load_image('spark/frames/spark-preview2.png'), False, False))
-        self.frames.append(pygame.transform.flip(load_image('spark/frames/spark-preview3.png'), False, False))
-        self.frames.append(pygame.transform.flip(load_image('spark/frames/spark-preview4.png'), False, False))
-        self.frames.append(pygame.transform.flip(load_image('spark/frames/spark-preview5.png'), False, False))
+        self.frames.append(pygame.transform.flip(
+            load_image('spark/frames/spark-preview1.png'), False, False))
+        self.frames.append(pygame.transform.flip(
+            load_image('spark/frames/spark-preview2.png'), False, False))
+        self.frames.append(pygame.transform.flip(
+            load_image('spark/frames/spark-preview3.png'), False, False))
+        self.frames.append(pygame.transform.flip(
+            load_image('spark/frames/spark-preview4.png'), False, False))
+        self.frames.append(pygame.transform.flip(
+            load_image('spark/frames/spark-preview5.png'), False, False))
         self.image = self.frames[0]
         self.rect = self.image.get_rect()
         self.cur_bullet = 0
@@ -218,6 +219,7 @@ class Laser(pygame.sprite.Sprite):
         self.image = load_image('laser_up.png')
         self.rect = self.image.get_rect()
         self.rect.x = -200
+ 
         
 class BUG(pygame.sprite.Sprite):
     def __init__(self, x, way):
@@ -273,9 +275,7 @@ class BUG(pygame.sprite.Sprite):
         
         self.rect.x = x
         self.rect.y = 300
-        
-
-        
+               
     def cut_sheet_go(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
@@ -288,7 +288,8 @@ class BUG(pygame.sprite.Sprite):
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames_death.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))  
+                self.frames_death.append(sheet.subsurface(
+                    pygame.Rect(frame_location, self.rect.size)))  
                 
     def cut_sheet_rotation(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
@@ -303,7 +304,8 @@ class BUG(pygame.sprite.Sprite):
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames_attack.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size))) 
+                self.frames_attack.append(
+                    sheet.subsurface(pygame.Rect(frame_location, self.rect.size))) 
                 
     def mirror(self, frames):
         for im in range(len(frames)):
@@ -376,22 +378,23 @@ class BUG(pygame.sprite.Sprite):
             self.attack_attack = 1
         self.image = self.frames_attack[self.cur_frame_attack]         
 
+
 def terminate():
     pygame.quit()
     sys.exit()
+ 
                 
 def start_screen():
-    intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
+    intro_text = ["      BUGKILLER",
+                  "    ",
+                  "            PLAY"]
 
     fon = pygame.transform.scale(load_image('bulkhead-wallsx1.png'), (768, 512))
     screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 250
+    font = pygame.font.Font(None, 70)
+    text_coord = 100
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, 1, pygame.Color('red'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -403,11 +406,46 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x = event.pos[0]
+                y = event.pos[1]
+                if ((x > 310) and (x < 430)) and ((y > 230) and (y < 265)):
+                    return
         pygame.display.flip()
         clock.tick(fps)
+ 
+        
+def end_screen():
+    intro_text = ["      GAME OVER!!!",
+                  "    ",
+                  "      KILLED: " + str(Y_kord.killed)
+                  ]
+
+    fon = pygame.transform.scale(load_image('bulkhead-wallsx1.png'), (768, 512))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 70)
+    text_coord = 100
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('red'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 150
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x = event.pos[0]
+                y = event.pos[1]
+                if ((x > 310) and (x < 430)) and ((y > 230) and (y < 265)):
+                    return
+        pygame.display.flip()
+        clock.tick(fps)
+
         
 def bug_update(bug, laser):
     if bug.death:
@@ -419,7 +457,9 @@ def bug_update(bug, laser):
         elif bug.attack_attack == 0:
             bug.update_attack(laser)
         else:
-            if ((bug.rect.x < ship.rect.x - 65)and(bug.way == 'RIGHT'))or((bug.rect.x > ship.rect.x - 65)and(bug.way =='LEFT')):
+            kostl1 = ((bug.rect.x < ship.rect.x - 65) and (bug.way == 'RIGHT'))
+            kostl2 = ((bug.rect.x > ship.rect.x - 65) and (bug.way == 'LEFT'))
+            if kostl1 or kostl2:
                 bug.update_rotation_2_mirror()
             else:      
                 bug.update_rotation_2()
@@ -455,6 +495,17 @@ def bug_update(bug, laser):
     else:
         bug.update_go()
 
+
+running = True
+bug_sprites = pygame.sprite.Group()        
+all_sprites = pygame.sprite.Group()
+space = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+boom = pygame.sprite.Group()
+LASER = pygame.sprite.Group()
+Ships = pygame.sprite.Group()
+
 start_screen() 
 
 pos_y = Y_kord()
@@ -466,9 +517,9 @@ tile_images = {
 } 
 ship, level_x, level_y = generate_level(load_level('map.txt'))         
 dist = 5
-Zemlia = Planet('Terran.png',600, 80, 29)
+Zemlia = Planet('Terran.png', 600, 80, 29)
 SPASE = Space()
-bom = Boom(load_image('explotions/explosion-4.png'),12, 1)
+bom = Boom(load_image('explotions/explosion-4.png'), 12, 1)
 Ships.draw(screen)
 tfboom = 13
 camera = Camera((7, 7))
@@ -478,28 +529,24 @@ nomer_bullet = 0
 BIGBUGs = []
 GdeBug = 1 
 
-while running:
+while running:   
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
                        
-        elif event.type == pygame.MOUSEBUTTONUP:
-            tfboom = 15
+        elif event.type == pygame.MOUSEBUTTONDOWN and ship.death == 0:     
             bullist.append([Bullet(ship.rect.x, ship.rect.y), 1])
-            bom.cur_frame = 0
-            bom.rect.x = event.pos[0] - 65
-            bom.rect.y = event.pos[1] - 105
             
         key = pygame.key.get_pressed() 
         
         if event.type == pygame.KEYDOWN:           
-            if (event.key == pygame.K_DOWN) and (ship.rect.top + dist < 440):
+            if (event.key == pygame.K_s) and (ship.rect.top + dist < 440):
                 ship.rect.top += dist
-            elif (key[pygame.K_UP]) and (ship.rect.top - dist > 0):
+            elif (key[pygame.K_w]) and (ship.rect.top - dist > 0):
                 ship.rect.top -= dist
-            if (key[pygame.K_RIGHT]) and (ship.rect.left + dist < 720):
+            if (key[pygame.K_d]) and (ship.rect.left + dist < 720):
                 ship.rect.left += dist
-            elif (key[pygame.K_LEFT]) and (ship.rect.left - dist > 0):
+            elif (key[pygame.K_a]) and (ship.rect.left - dist > 0):
                 ship.rect.left -= dist 
                 
     space.draw(screen)
@@ -513,16 +560,15 @@ while running:
     for sprites in tiles_group:
         camera.apply(sprites)
     
-    if Y_kord.juk == 0:
-        WAY = choice(('RIGHT' , 'LEFT'))
+    if Y_kord.juk == 0 and ship.death == 0:
+        WAY = choice(('RIGHT', 'LEFT'))
         if WAY == 'RIGHT':
             BIGBUGs.append([BUG(-1500, WAY), Laser()])
         else:
             BIGBUGs.append([BUG(1500, WAY), Laser()])
         
     Zemlia.update()
-    ship.update()
-    
+            
     for i in BIGBUGs:
         bug_update(i[0], i[1])
     
@@ -530,12 +576,23 @@ while running:
     tiles_group.draw(screen)
     bug_sprites.draw(screen)
     bullets.draw(screen)
-    Ships.draw(screen)   
-    LASER.draw(screen)
-    if tfboom < 12:
+    
+    if ship.death == 0:
+        tfboom = 0
+        bom.cur_frame = 0
+        bom.rect.x = ship.rect.x - 30
+        bom.rect.y = ship.rect.y - 50
+        
+        ship.update()
+    elif tfboom < 12:
         boom.draw(screen) 
         bom.update()
-        tfboom += 1 
+        tfboom += 1  
+    else:
+        end_screen() 
+           
+    Ships.draw(screen)
+    LASER.draw(screen)
     pygame.display.flip()
     clock.tick(30)
     
